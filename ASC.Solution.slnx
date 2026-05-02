@@ -1,0 +1,8 @@
+<Solution>
+  <Project Path="ASC.business/ASC.business.csproj" />
+  <Project Path="ASC.DataAccess/ASC.DataAccess.csproj" />
+  <Project Path="ASC.Model/ASC.Model.csproj" />
+  <Project Path="ASC.Tests/ASC.Tests.csproj" Id="64d3e14f-ca5c-4d33-8482-c5d0ff51361a" />
+  <Project Path="ASC.Utilities/ASC.Utilities.csproj" />
+  <Project Path="ASC.Web/ASC.Web.csproj" />
+</Solution>
