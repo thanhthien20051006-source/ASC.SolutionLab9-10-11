@@ -1,22 +1,26 @@
-﻿using ASC.Tests.TestUtilities;
+using ASC.Tests.TestUtilities;
 using ASC.Web.Configuration;
 using ASC.Web.Controllers;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Moq;
 using ASC.Utilities;
+
 namespace ASC.Tests
 {
     public class HomeControllerTests
     {
         private readonly Mock<IOptions<ApplicationSettings>> optionsMock;
         private readonly Mock<HttpContext> mockHttpContext;
+        private readonly Mock<ILogger<HomeController>> loggerMock;
 
         public HomeControllerTests()
         {
             // Create an instance of Mock IOptions
             optionsMock = new Mock<IOptions<ApplicationSettings>>();
+            loggerMock = new Mock<ILogger<HomeController>>();
 
             mockHttpContext = new Mock<HttpContext>();
             // Set FakeSession to HttpContext Session.
@@ -29,12 +33,21 @@ namespace ASC.Tests
             });
         }
 
+        private HomeController CreateController()
+        {
+            return new HomeController(optionsMock.Object, loggerMock.Object)
+            {
+                ControllerContext = new ControllerContext
+                {
+                    HttpContext = mockHttpContext.Object
+                }
+            };
+        }
+
         [Fact]
         public void HomeController_Index_View_Test()
         {
-            // Home controller instantiated with Mock IOptions<> object
-            var controller = new HomeController(optionsMock.Object);
-            controller.ControllerContext.HttpContext = mockHttpContext.Object;
+            var controller = CreateController();
 
             // Assert return ViewResult
             Assert.IsType(typeof(ViewResult), controller.Index());
@@ -44,8 +57,7 @@ namespace ASC.Tests
         [Fact]
         public void HomeController_Index_NoModel_Test()
         {
-            var controller = new HomeController(optionsMock.Object);
-            controller.ControllerContext.HttpContext = mockHttpContext.Object;
+            var controller = CreateController();
 
             // Assert Model for Null
             Assert.Null((controller.Index() as ViewResult).ViewData.Model);
@@ -54,17 +66,16 @@ namespace ASC.Tests
         [Fact]
         public void HomeController_Index_Validation_Test()
         {
-            var controller = new HomeController(optionsMock.Object);
-            controller.ControllerContext.HttpContext = mockHttpContext.Object;
+            var controller = CreateController();
 
             // Assert ModelState Error Count to 0
             Assert.Equal(0, (controller.Index() as ViewResult).ViewData.ModelState.ErrorCount);
         }
+
         [Fact]
         public void HomeController_Index_Session_Test()
         {
-            var controller = new HomeController(optionsMock.Object);
-            controller.ControllerContext.HttpContext = mockHttpContext.Object;
+            var controller = CreateController();
             controller.Index();
             //Session value with key "Test" should not be null.
             Assert.NotNull(controller.HttpContext.Session.GetSession<ApplicationSettings>("Test"));

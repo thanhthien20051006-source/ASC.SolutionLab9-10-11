@@ -12,6 +12,8 @@ namespace ASC.Business.Interfaces
         Task CreateServiceRequestAsync(ServiceRequest request);
         ServiceRequest UpdateServiceRequest(ServiceRequest request);
         Task<ServiceRequest> UpdateServiceRequestStatusAsync(string rowKey, string partitionKey, string status);
+        Task<ServiceRequest> GetServiceRequestByKeysAsync(string partitionKey, string rowKey);
+        Task<ServiceRequest> AssignServiceEngineerAsync(string partitionKey, string rowKey, string serviceEngineerEmail);
 
         Task<List<ServiceRequest>> GetServiceRequestsByRequestedDateAndStatus(DateTime? requestedDate,
             List<string> status = null, string email = "", string serviceEngineerEmail = "");

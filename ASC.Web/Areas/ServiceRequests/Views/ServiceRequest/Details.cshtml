@@ -1,0 +1,94 @@
+@model ASC.Web.Areas.ServiceRequests.Models.ServiceRequestDetailsViewModel
+@using ASC.Model.BaseTypes
+@{
+    Layout = "~/Views/Shared/_SecureLayout.cshtml";
+    var request = Model.ServiceRequest;
+}
+
+<div class="row"></div>
+<div class="row padding-top-20px padding-left-20px padding-right-20px">
+    <div class="row z-depth-3">
+        <div class="section white-text padding-left-10px blue-grey lighten-1">
+            <h5>Service Request Details</h5>
+        </div>
+        <div class="divider"></div>
+
+        <div class="col s12 padding-20px">
+            <table class="striped">
+                <tr><th>Customer</th><td>@request.PartitionKey</td></tr>
+                <tr><th>Row Key</th><td>@request.RowKey</td></tr>
+                <tr><th>Vehicle Name</th><td>@request.VehicleName</td></tr>
+                <tr><th>Vehicle Type</th><td>@request.VehicleType</td></tr>
+                <tr><th>Requested Date</th><td>@(request.RequestedDate?.ToString("dd/MM/yyyy"))</td></tr>
+                <tr><th>Completed Date</th><td>@(request.CompletedDate?.ToString("dd/MM/yyyy"))</td></tr>
+                <tr><th>Status</th><td>@request.Status</td></tr>
+                <tr><th>Service Engineer</th><td>@request.ServiceEngineer</td></tr>
+                <tr><th>Requested Services</th><td>@request.RequestedServices</td></tr>
+            </table>
+        </div>
+    </div>
+
+    @if (User.IsInRole(Roles.Admin.ToString()))
+    {
+        <div class="row z-depth-3">
+            <div class="section white-text padding-left-10px blue-grey lighten-1">
+                <h5>Assign Engineer</h5>
+            </div>
+            <div class="divider"></div>
+            <form asp-area="ServiceRequests" asp-controller="ServiceRequest" asp-action="AssignEngineer" method="post" class="col s12 padding-20px">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="partitionKey" value="@request.PartitionKey" />
+                <input type="hidden" name="rowKey" value="@request.RowKey" />
+                <div class="input-field col s8">
+                    <select asp-for="SelectedServiceEngineer" name="selectedServiceEngineer" asp-items="Model.ServiceEngineers">
+                        <option value="">--Select Engineer--</option>
+                    </select>
+                    <label>Service Engineer</label>
+                </div>
+                <div class="input-field col s4 right-align">
+                    <button class="btn waves-effect waves-light" type="submit">
+                        Assign
+                        <i class="material-icons right">send</i>
+                    </button>
+                </div>
+            </form>
+        </div>
+    }
+
+    @if (User.IsInRole(Roles.Admin.ToString()) || User.IsInRole(Roles.Engineer.ToString()))
+    {
+        <div class="row z-depth-3">
+            <div class="section white-text padding-left-10px blue-grey lighten-1">
+                <h5>Update Status</h5>
+            </div>
+            <div class="divider"></div>
+            <form asp-area="ServiceRequests" asp-controller="ServiceRequest" asp-action="UpdateStatus" method="post" class="col s12 padding-20px">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="partitionKey" value="@request.PartitionKey" />
+                <input type="hidden" name="rowKey" value="@request.RowKey" />
+                <div class="input-field col s8">
+                    <select asp-for="SelectedStatus" name="selectedStatus" asp-items="Model.Statuses"></select>
+                    <label>Status</label>
+                </div>
+                <div class="input-field col s4 right-align">
+                    <button class="btn waves-effect waves-light" type="submit">
+                        Update
+                        <i class="material-icons right">send</i>
+                    </button>
+                </div>
+            </form>
+        </div>
+    }
+
+    <div class="row right-align">
+        <a class="btn grey" asp-area="ServiceRequests" asp-controller="Dashboard" asp-action="Dashboard">Back</a>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            $('select').formSelect();
+        });
+    </script>
+}

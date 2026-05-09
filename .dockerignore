@@ -1,0 +1,11 @@
+**/bin/
+**/obj/
+**/.vs/
+**/.git/
+**/.github/
+**/node_modules/
+_buildcheck/
+ASC.Web/appsettings.Development.json
+*.user
+*.suo
+*.cache

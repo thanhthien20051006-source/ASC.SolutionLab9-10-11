@@ -37,7 +37,7 @@
                                         @(Boolean.Parse(identity.SingleOrDefault(p => p.Type == "IsActive").Value))
                                     </td>
                                     <td>
-                                        <img src="@(Boolean.Parse(identity.SingleOrDefault(p => p.Type == "IsActive").Value) ? "/images/green_tick.png" : "/images/red_cross.png")" />
+                                        <img class="is-active-icon" src="@(Boolean.Parse(identity.SingleOrDefault(p => p.Type == "IsActive").Value) ? "/images/tick.png" : "/images/cross.png")" />
                                     </td>
                                     <td>
                                         <i class="small material-icons edit cursor-hand">mode_edit</i>
@@ -102,6 +102,15 @@
         <div class="row"></div>
     </div>
 </div>
+
+<style>
+    #tblCustomers .is-active-icon {
+        width: 18px;
+        height: 18px;
+        object-fit: contain;
+        vertical-align: middle;
+    }
+</style>
 
 @section Scripts {
     <script>

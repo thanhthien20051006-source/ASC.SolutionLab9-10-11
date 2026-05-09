@@ -8,10 +8,13 @@ namespace ASC.Web.Controllers
 {
     public class HomeController : AnonymousController
     {
-        private IOptions<ApplicationSettings> _settings;
-        public HomeController(IOptions<ApplicationSettings> settings)
+        private readonly IOptions<ApplicationSettings> _settings;
+        private readonly ILogger<HomeController> _logger;
+
+        public HomeController(IOptions<ApplicationSettings> settings, ILogger<HomeController> logger)
         {
             _settings = settings;
+            _logger = logger;
         }
 
         public IActionResult Index()
@@ -32,5 +35,19 @@ namespace ASC.Web.Controllers
         {
             return View();
         }
+
+        [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
+        public IActionResult Error()
+        {
+            var requestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier;
+            _logger.LogError("Unhandled exception. RequestId: {RequestId}", requestId);
+
+            return View(new ErrorViewModel
+            {
+                RequestId = requestId,
+                Message = "Có lỗi xảy ra khi xử lý yêu cầu. Vui lòng thử lại hoặc liên hệ Admin."
+            });
+        }
+
     }
 }

@@ -46,11 +46,38 @@ namespace ASC.Business
                     throw new NullReferenceException();
 
                 serviceRequest.Status = status;
+                if (status == ASC.Model.BaseTypes.Status.Completed.ToString())
+                {
+                    serviceRequest.CompletedDate = DateTime.UtcNow;
+                }
+
                 _unitOfWork.Repository<ServiceRequest>().Update(serviceRequest);
                 _unitOfWork.CommitTransaction();
                 return serviceRequest;
             }
         }
+
+        public async Task<ServiceRequest> GetServiceRequestByKeysAsync(string partitionKey, string rowKey)
+        {
+            return await _unitOfWork.Repository<ServiceRequest>().FindAsync(partitionKey, rowKey);
+        }
+
+        public async Task<ServiceRequest> AssignServiceEngineerAsync(string partitionKey, string rowKey, string serviceEngineerEmail)
+        {
+            using (_unitOfWork)
+            {
+                var serviceRequest = await _unitOfWork.Repository<ServiceRequest>().FindAsync(partitionKey, rowKey);
+                if (serviceRequest == null)
+                    throw new NullReferenceException();
+
+                serviceRequest.ServiceEngineer = serviceEngineerEmail;
+                serviceRequest.Status = ASC.Model.BaseTypes.Status.Initiated.ToString();
+                _unitOfWork.Repository<ServiceRequest>().Update(serviceRequest);
+                _unitOfWork.CommitTransaction();
+                return serviceRequest;
+            }
+        }
+
         public async Task<List<ServiceRequest>> GetServiceRequestsByRequestedDateAndStatus
     (DateTime? requestedDate, List<string> status = null, string email = "", string serviceEngineerEmail = "")
         {

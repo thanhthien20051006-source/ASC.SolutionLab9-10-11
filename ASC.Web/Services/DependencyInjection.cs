@@ -4,6 +4,7 @@ using ASC.DataAccess;
 using ASC.Solution.Services;
 using ASC.Web.Configuration;
 using ASC.Web.Data;
+using ASC.Web.Filters;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
@@ -70,11 +71,18 @@ namespace ASC.Web.Services
             //Add RazorPages , MVC
             services.AddRazorPages();
             services.AddDatabaseDeveloperPageExceptionFilter();
-            services.AddControllersWithViews();
+            services.AddScoped<UserActivityFilter>();
+            services.AddControllersWithViews(options =>
+            {
+                options.Filters.Add<UserActivityFilter>();
+            });
             //Add MasterDataOperations
             services.AddScoped<IMasterDataOperations, MasterDataOperations>();
             services.AddAutoMapper(typeof(ApplicationDbContext));
-            services.AddControllersWithViews().AddJsonOptions(options =>
+            services.AddControllersWithViews(options =>
+            {
+                options.Filters.Add<UserActivityFilter>();
+            }).AddJsonOptions(options =>
             {
                 options.JsonSerializerOptions.PropertyNamingPolicy = null;
             });

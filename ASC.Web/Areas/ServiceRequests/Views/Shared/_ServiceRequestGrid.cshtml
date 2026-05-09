@@ -84,7 +84,15 @@
                                 serviceRequest.RequestedServices;
                             <td title="@serviceRequest.RequestedServices">@trimText</td>
                         }
-                        <td><i class="small material-icons view cursor-hand">pageview</i></td>
+                        <td>
+                            <a asp-area="ServiceRequests"
+                               asp-controller="ServiceRequest"
+                               asp-action="Details"
+                               asp-route-partitionKey="@serviceRequest.PartitionKey"
+                               asp-route-rowKey="@serviceRequest.RowKey">
+                                <i class="small material-icons view cursor-hand">pageview</i>
+                            </a>
+                        </td>
                     </tr>
                 }
             </tbody>

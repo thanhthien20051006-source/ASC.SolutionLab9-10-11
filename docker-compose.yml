@@ -1,0 +1,13 @@
+services:
+  asc-web:
+    build:
+      context: .
+      dockerfile: ASC.Web/Dockerfile
+    ports:
+      - "8080:8080"
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      ASPNETCORE_URLS: http://+:8080
+      ConnectionStrings__DefaultConnection: "${ASC_DEFAULT_CONNECTION}"
+      CacheSettings__CacheConnectionString: "${ASC_REDIS_CONNECTION}"
+      CacheSettings__CacheInstance: "ASC"
