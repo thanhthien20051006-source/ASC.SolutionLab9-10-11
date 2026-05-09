@@ -15,10 +15,23 @@ public class Repository<T> : IRepository<T> where T : BaseEntity, new()
     public async Task<T> AddAsync(T entity)
     {
         var entityToInsert = entity as BaseEntity;
+
         entityToInsert.CreatedDate = DateTime.UtcNow;
         entityToInsert.UpdatedDate = DateTime.UtcNow;
-        var result = dbContext.Set<T>().AddAsync(entity).Result;
-        return result as T;
+
+        if (string.IsNullOrWhiteSpace(entityToInsert.CreatedBy))
+        {
+            entityToInsert.CreatedBy = "System";
+        }
+
+        if (string.IsNullOrWhiteSpace(entityToInsert.UpdatedBy))
+        {
+            entityToInsert.UpdatedBy = entityToInsert.CreatedBy;
+        }
+
+        var result = await dbContext.Set<T>().AddAsync(entity);
+
+        return result.Entity;
     }
 
     public void Update(T entity)

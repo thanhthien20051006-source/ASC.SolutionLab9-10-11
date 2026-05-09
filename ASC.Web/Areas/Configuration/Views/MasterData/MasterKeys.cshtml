@@ -13,7 +13,6 @@
         <div class="col s12 padding-bottom-15px">
             @if (Model.MasterKeys != null)
             {
-                <!-- Display List of Master Keys -->
                 <table class="highlight centered" id="tblMasterKeys">
                     <thead>
                         <tr>
@@ -34,10 +33,12 @@
                                 <td>@masterKey.Name</td>
                                 <td>@masterKey.IsActive</td>
                                 <td>
-                                    <img src="@(masterKey.IsActive ? "/images/tick.png" : "/images/cross.png")" />
+                                    <img class="is-active-icon" src="@(masterKey.IsActive ? "/images/tick.png" : "/images/cross.png")" />
                                 </td>
                                 <td>
-                                    <i class="small material-icons edit cursor-hand">mode_edit</i>
+                                    <i class="small material-icons edit cursor-hand">
+                                        mode_edit
+                                    </i>
                                 </td>
                             </tr>
                         }
@@ -46,66 +47,174 @@
             }
             else
             {
-                <!-- In case of No records, display no records message -->
                 <div class="card blue-grey lighten-1">
                     <div class="card-content white-text">
                         <span class="card-title">No Service Engineers!!!</span>
-                        <p>No Master Keys found, please add a Master Key to system.</p>
+                        <p>
+                            No Master Keys found, please add a Master Key to system.
+                        </p>
                     </div>
                 </div>
             }
         </div>
     </div>
-
-    <!-- Details Section -->
-    <div class="row z-depth-3">
-        <div class="col s12 padding-0px">
-            <div class="section white-text padding-left-10px blue-grey lighten-1">
-                <h5>Master Key Details</h5>
-            </div>
-            <div class="divider"></div>
-            <form asp-controller="MasterData" asp-action="MasterKeys" method="post"
-                  class="col s12" id="formMasterKey">
-                <div class="row">
-                    <input type="hidden" asp-for="IsEdit" />
-                    <input type="hidden" asp-for="MasterKeyInContext.RowKey" />
-                    <input type="hidden" asp-for="MasterKeyInContext.PartitionKey" />
-                    
-                    <div class="input-field col s4">
-                        <input asp-for="MasterKeyInContext.RowKey" id="Input_MasterKey_RowKey" disabled="disabled" />
-                        <label asp-for="MasterKeyInContext.RowKey"></label>
-                    </div>
-                    <div class="input-field col s4">
-                        <input asp-for="MasterKeyInContext.Name" class="validate" />
-                        <label asp-for="MasterKeyInContext.Name"></label>
-                    </div>
-                    <div class="input-field col s4">
-                        <div class="switch">
-                            <label>
-                                Is Active
-                                <input asp-for="MasterKeyInContext.IsActive" class="validate" />
-                                <span class="lever"></span>
-                            </label>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="row">
-                    <div class="input-field col s12 right-align">
-                        <button class="btn waves-effect waves-light btnSubmit" type="submit" name="action">
-                            Create
-                            <i class="material-icons right">send</i>
-                        </button>
-                        <button class="btn waves-effect waves-light reset red lighten-1" type="button" name="action">
-                            Reset
-                        </button>
-                    </div>
-                    <div class="row col s12 right-align" asp-validation-summary="All"></div>
-                </div>
-            </form>
+</div>
+<div class="row"></div>
+<div class="row z-depth-3 padding-left-20px padding-right-20px">
+    <div class="col s12 padding-0px">
+        <div class="section white-text padding-left-10px blue-grey lighten-1">
+            <h5>Master Key Details</h5>
         </div>
+        <div class="divider"></div>
+        <form action="/Configuration/MasterData/MasterKeys" method="post"
+              class="col s12" id="formMasterKey">
+            @Html.AntiForgeryToken()
+            <input type="hidden" id="IsEdit" name="IsEdit" value="False" />
+            <input type="hidden" id="MasterKeyInContext_RowKey" name="MasterKeyInContext.RowKey" />
+            <input type="hidden" id="MasterKeyInContext_PartitionKey" name="MasterKeyInContext.PartitionKey" />
+
+            <div class="row master-key-fields-row">
+                <div class="input-field col s4">
+                    <input type="text" id="Input_MasterKey_RowKey" disabled="disabled" />
+                    <label for="Input_MasterKey_RowKey">Row Key</label>
+                </div>
+                <div class="input-field col s4">
+                    <input type="text"
+                           id="MasterKeyInContext_Name"
+                           name="MasterKeyInContext.Name"
+                           class="validate"
+                           required="required"
+                           value="@(Model.MasterKeyInContext?.Name ?? string.Empty)" />
+                    <label for="MasterKeyInContext_Name">Name</label>
+                    <span class="red-text field-validation-valid" data-valmsg-for="MasterKeyInContext.Name" data-valmsg-replace="true"></span>
+                </div>
+                <div class="input-field col s4 master-key-switch">
+                    <span class="switch-title">Is Active</span>
+                    <div class="switch">
+                        <label>
+                            <input type="checkbox"
+                                   id="MasterKeyInContext_IsActive"
+                                   name="MasterKeyInContext.IsActive"
+                                   value="true" />
+                            <span class="lever"></span>
+                        </label>
+                    </div>
+                    <input type="hidden" name="MasterKeyInContext.IsActive" value="false" />
+                </div>
+            </div>
+            <div class="row master-key-actions-row">
+                <div class="col s12 right-align master-key-actions">
+                    <button class="btn waves-effect waves-light btnSubmit"
+                            type="submit" name="action">
+                        Create
+                        <i class="material-icons right">send</i>
+                    </button>
+                    <button class="btn waves-effect waves-light reset red lighten-1" type="button" name="action">
+                        Reset
+                    </button>
+                </div>
+                <div class="row col s12 right-align" asp-validation-summary="All"></div>
+            </div>
+        </form>
     </div>
 </div>
+<div class="row"></div>
+
+<style>
+    #tblMasterKeys {
+        width: 100% !important;
+        border-bottom: 1px solid #333;
+    }
+
+    #tblMasterKeys th,
+    #tblMasterKeys td {
+        padding: 6px 5px;
+        font-size: 12px;
+        line-height: 18px;
+    }
+
+    #tblMasterKeys img.is-active-icon {
+        width: 20px;
+        height: 20px;
+        object-fit: contain;
+        display: inline-block;
+        vertical-align: middle;
+    }
+
+    #tblMasterKeys .material-icons.edit {
+        font-size: 22px;
+        line-height: 22px;
+    }
+
+    #tblMasterKeys_wrapper .dataTables_length,
+    #tblMasterKeys_wrapper .dataTables_filter,
+    #tblMasterKeys_wrapper .dataTables_info,
+    #tblMasterKeys_wrapper .dataTables_paginate {
+        font-size: 11px;
+    }
+
+    #tblMasterKeys_wrapper .dataTables_length select {
+        height: 28px;
+        font-size: 11px;
+    }
+
+    #formMasterKey {
+        min-height: 145px;
+        padding: 18px 12px 24px 12px;
+    }
+
+    #formMasterKey .master-key-fields-row {
+        margin-bottom: 0;
+    }
+
+    #formMasterKey .input-field {
+        margin-top: 0.7rem;
+    }
+
+    #formMasterKey .master-key-switch {
+        display: flex;
+        align-items: center;
+        padding-top: 2px;
+    }
+
+    #formMasterKey .master-key-switch .switch-title {
+        color: #9e9e9e;
+        font-size: 0.8rem;
+        margin-right: 10px;
+        line-height: 24px;
+    }
+
+    #formMasterKey .master-key-switch .switch {
+        line-height: 24px;
+    }
+
+    #formMasterKey .master-key-switch .switch label {
+        display: inline-block;
+        height: 24px;
+    }
+
+    #formMasterKey .master-key-actions-row {
+        margin-top: 18px;
+        margin-bottom: 0;
+    }
+
+    #formMasterKey .master-key-actions {
+        white-space: nowrap;
+    }
+
+    #formMasterKey .master-key-actions .btn {
+        margin-left: 4px;
+        height: 30px;
+        line-height: 30px;
+        padding: 0 18px;
+        font-size: 11px;
+    }
+
+    #formMasterKey .btnSubmit .material-icons {
+        font-size: 16px;
+        line-height: 30px;
+    }
+</style>
 
 @section Scripts {
     <script>
@@ -130,30 +239,38 @@
             // Handle Reset functionality
             $(document).on("click", ".reset", function () {
                 $('#formMasterKey')[0].reset();
-                $('.btnSubmit').text('Create');
+                $('#MasterKeyInContext_RowKey').val('');
+                $('#Input_MasterKey_RowKey').val('');
+                $('#MasterKeyInContext_PartitionKey').val('');
+                $('#MasterKeyInContext_Name').val('');
+                $('#MasterKeyInContext_Name').removeClass('valid invalid');
+                $('#MasterKeyInContext_IsActive').prop('checked', false);
+                $('.btnSubmit').html('Create <i class="material-icons right">send</i>');
                 $('#IsEdit').val('False');
+                $('.validation-summary-valid, .validation-summary-errors').find('ul').html('');
+                M.updateTextFields();
             });
 
             // On click of Edit icon, populate the details section with details of service engineer
             $(document).on('click', '.edit', function () {
                 var user = $('#tblMasterKeys').DataTable().row($(this).parents('tr')).data();
                 $('#IsEdit').val('True');
-                
+
                 // Map Row Key
                 $('#MasterKeyInContext_RowKey').val(user[0]);
                 $('#Input_MasterKey_RowKey').val(user[0]);
-                
+
                 // Map Partition Key
                 $('#MasterKeyInContext_PartitionKey').val(user[1]);
-                
+
                 // Map Name
                 $('#MasterKeyInContext_Name').val(user[2]);
                 $('#MasterKeyInContext_Name').addClass('valid');
-                
+
                 // Map IsActive
                 $('#MasterKeyInContext_IsActive').prop('checked', user[3] === 'True' ? true : false);
-                
-                $('.btnSubmit').text('Save');
+
+                $('.btnSubmit').html('Save <i class="material-icons right">send</i>');
                 M.updateTextFields();
             });
         });

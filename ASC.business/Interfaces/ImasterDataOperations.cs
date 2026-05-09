@@ -20,10 +20,7 @@ namespace ASC.Business.Interfaces
 
         Task<bool> InsertMasterValueAsync(MasterDataValue value);
 
-        Task<bool> UpdateMasterValueAsync(
-            string originalPartitionKey,
-            string originalRowKey,
-            MasterDataValue value);
+        Task<bool> UpdateMasterValueAsync(string originalPartitionKey, string originalRowKey, MasterDataValue value);
 
         Task<bool> UploadBulkMasterData(List<MasterDataValue> values);
     }

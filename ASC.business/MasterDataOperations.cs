@@ -1,7 +1,6 @@
 ﻿using ASC.Business.Interfaces;
 using ASC.DataAccess;
 using ASC.Model.Models;
-
 namespace ASC.Business
 {
     public class MasterDataOperations : IMasterDataOperations
@@ -15,167 +14,136 @@ namespace ASC.Business
 
         public async Task<List<MasterDataKey>> GetAllMasterKeysAsync()
         {
-            var masterKeys = await _unitOfWork
-                .Repository<MasterDataKey>()
-                .FindAllAsync();
-
+            var masterKeys = await _unitOfWork.Repository<MasterDataKey>().FindAllAsync();
             return masterKeys.ToList();
         }
 
         public async Task<List<MasterDataKey>> GetMaserKeyByNameAsync(string name)
         {
-            var masterKeys = await _unitOfWork
-                .Repository<MasterDataKey>()
-                .FindAllByPartitionKeyAsync(name);
-
+            var masterKeys = await _unitOfWork.Repository<MasterDataKey>().FindAllByPartitionKeyAsync(name);
             return masterKeys.ToList();
         }
-
         public async Task<bool> InsertMasterKeyAsync(MasterDataKey key)
         {
-            await _unitOfWork
-                .Repository<MasterDataKey>()
-                .AddAsync(key);
-
-            _unitOfWork.CommitTransaction();
-
-            return true;
-        }
-
-        public async Task<bool> UpdateMasterKeyAsync(string originalPartitionKey, MasterDataKey key)
-        {
-            var masterKey = await _unitOfWork
-                .Repository<MasterDataKey>()
-                .FindAsync(originalPartitionKey, key.RowKey);
-
-            if (masterKey == null)
+            using (_unitOfWork)
             {
-                return false;
+                await _unitOfWork.Repository<MasterDataKey>().AddAsync(key);
+                _unitOfWork.CommitTransaction();
+                return true;
             }
-
-            masterKey.Name = key.Name;
-            masterKey.IsActive = key.IsActive;
-            masterKey.IsDeleted = key.IsDeleted;
-
-            _unitOfWork
-                .Repository<MasterDataKey>()
-                .Update(masterKey);
-
-            _unitOfWork.CommitTransaction();
-
-            return true;
         }
 
         public async Task<List<MasterDataValue>> GetAllMasterValuesByKeyAsync(string key)
         {
-            var masterValues = await _unitOfWork
-                .Repository<MasterDataValue>()
-                .FindAllByPartitionKeyAsync(key);
-
-            return masterValues.ToList();
-        }
-
-        public async Task<List<MasterDataValue>> GetAllMasterValuesAsync()
-        {
-            var masterValues = await _unitOfWork
-                .Repository<MasterDataValue>()
-                .FindAllAsync();
-
-            return masterValues.ToList();
+            try
+            {
+                var masterKeys = await _unitOfWork.Repository<MasterDataValue>().FindAllByPartitionKeyAsync(key);
+                return masterKeys.ToList();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex);
+            }
+            return null;
         }
 
         public async Task<MasterDataValue> GetMasterValueByNameAsync(string key, string name)
         {
-            var masterValue = await _unitOfWork
-                .Repository<MasterDataValue>()
-                .FindAsync(key, name);
-
-            return masterValue;
+            var masterValues = await _unitOfWork.Repository<MasterDataValue>().
+                FindAsync(key, name);
+            return masterValues;
         }
-
         public async Task<bool> InsertMasterValueAsync(MasterDataValue value)
         {
-            await _unitOfWork
-                .Repository<MasterDataValue>()
-                .AddAsync(value);
-
-            _unitOfWork.CommitTransaction();
-
-            return true;
+            using (_unitOfWork)
+            {
+                await _unitOfWork.Repository<MasterDataValue>().AddAsync(value);
+                _unitOfWork.CommitTransaction();
+                return true;
+            }
         }
 
-        public async Task<bool> UpdateMasterValueAsync(
-            string originalPartitionKey,
-            string originalRowKey,
-            MasterDataValue value)
+        public async Task<bool> UpdateMasterKeyAsync(string orginalPartitionKey, MasterDataKey key)
         {
-            var masterValue = await _unitOfWork
-                .Repository<MasterDataValue>()
-                .FindAsync(originalPartitionKey, originalRowKey);
-
-            if (masterValue == null)
+            using (_unitOfWork)
             {
-                return false;
+                var masterKey = await _unitOfWork.Repository<MasterDataKey>().
+                FindAsync(orginalPartitionKey, key.RowKey);
+                masterKey.IsActive = key.IsActive;
+                masterKey.IsDeleted = key.IsDeleted;
+                masterKey.Name = key.Name;
+                masterKey.UpdatedBy = string.IsNullOrWhiteSpace(key.UpdatedBy) ? masterKey.UpdatedBy : key.UpdatedBy;
+                _unitOfWork.Repository<MasterDataKey>().Update(masterKey);
+                _unitOfWork.CommitTransaction();
+                return true;
             }
+        }
+        public async Task<bool> UpdateMasterValueAsync(string originalPartitionKey, string originalRowKey, MasterDataValue value)
+        {
+            using (_unitOfWork)
+            {
+                var masterValue = await _unitOfWork.Repository<MasterDataValue>().
+                FindAsync(originalPartitionKey, originalRowKey);
+                masterValue.IsActive = value.IsActive;
+                masterValue.IsDeleted = value.IsDeleted;
+                masterValue.Name = value.Name;
+                masterValue.UpdatedBy = string.IsNullOrWhiteSpace(value.UpdatedBy) ? masterValue.UpdatedBy : value.UpdatedBy;
+                _unitOfWork.Repository<MasterDataValue>().Update(masterValue);
+                _unitOfWork.CommitTransaction();
+                return true;
+            }
+        }
 
-            masterValue.Name = value.Name;
-            masterValue.IsActive = value.IsActive;
-            masterValue.IsDeleted = value.IsDeleted;
-
-            _unitOfWork
-                .Repository<MasterDataValue>()
-                .Update(masterValue);
-
-            _unitOfWork.CommitTransaction();
-
-            return true;
+        public async Task<List<MasterDataValue>> GetAllMasterValuesAsync()
+        {
+            var masterValues = await _unitOfWork.Repository<MasterDataValue>().
+            FindAllAsync();
+            return masterValues.ToList();
         }
 
         public async Task<bool> UploadBulkMasterData(List<MasterDataValue> values)
         {
-            foreach (var value in values)
+            using (_unitOfWork)
             {
-                var masterKeys = await GetMaserKeyByNameAsync(value.PartitionKey);
-
-                if (!masterKeys.Any())
+                foreach (var value in values)
                 {
-                    await _unitOfWork.Repository<MasterDataKey>().AddAsync(new MasterDataKey
+                    value.CreatedBy = string.IsNullOrWhiteSpace(value.CreatedBy) ? "System" : value.CreatedBy;
+                    value.UpdatedBy = string.IsNullOrWhiteSpace(value.UpdatedBy) ? value.CreatedBy : value.UpdatedBy;
+
+                    // Find, if null insert MasterKey
+                    var masterKey = await _unitOfWork.Repository<MasterDataKey>().FindAllByPartitionKeyAsync(value.PartitionKey);
+                    if (!masterKey.Any())
                     {
-                        RowKey = Guid.NewGuid().ToString(),
-                        PartitionKey = value.PartitionKey,
-                        Name = value.PartitionKey,
-                        IsActive = true,
-                        CreatedBy = value.CreatedBy ?? "System"
-                    });
+                        await _unitOfWork.Repository<MasterDataKey>().AddAsync(new MasterDataKey()
+                        {
+                            Name = value.PartitionKey,
+                            RowKey = Guid.NewGuid().ToString(),
+                            PartitionKey = value.PartitionKey,
+                            IsActive = true,
+                            CreatedBy = value.CreatedBy,
+                            UpdatedBy = value.UpdatedBy
+                        });
+                    }
+
+                    // Find, if null Insert MasterValue
+                    var masterValuesByKey = await _unitOfWork.Repository<MasterDataValue>().FindAllByPartitionKeyAsync(value.PartitionKey);
+                    var masterValue = masterValuesByKey.FirstOrDefault(p => p.Name == value.Name);
+                    if (masterValue == null)
+                    {
+                        await _unitOfWork.Repository<MasterDataValue>().AddAsync(value);
+                    }
+                    else
+                    {
+                        masterValue.IsActive = value.IsActive;
+                        masterValue.IsDeleted = value.IsDeleted;
+                        masterValue.Name = value.Name;
+                        masterValue.UpdatedBy = value.UpdatedBy;
+                        _unitOfWork.Repository<MasterDataValue>().Update(masterValue);
+                    }
                 }
-
-                var masterValuesByKey =
-                    await GetAllMasterValuesByKeyAsync(value.PartitionKey);
-
-                var masterValue = masterValuesByKey
-                    .FirstOrDefault(p => p.Name == value.Name);
-
-                if (masterValue == null)
-                {
-                    await _unitOfWork
-                        .Repository<MasterDataValue>()
-                        .AddAsync(value);
-                }
-                else
-                {
-                    masterValue.IsActive = value.IsActive;
-                    masterValue.IsDeleted = value.IsDeleted;
-                    masterValue.Name = value.Name;
-
-                    _unitOfWork
-                        .Repository<MasterDataValue>()
-                        .Update(masterValue);
-                }
+                _unitOfWork.CommitTransaction();
+                return true;
             }
-
-            _unitOfWork.CommitTransaction();
-
-            return true;
         }
     }
 }
